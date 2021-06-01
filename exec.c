@@ -63,16 +63,16 @@ exec(char *path, char **argv)
   // Allocate two pages at edge of memory. Boundary at (KERNBASE - 1).
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
-  st = (KERNBASE - 1) - 2*PGSIZE;
+  st = (KERNBASE - 1) - (2*PGSIZE);
 //  if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
 //    goto bad;
-
+  cprintf("About to allocate stack");
 // [Bryan]: After modification, now stack begins at (KERNBASE - 1) and extends down two pages.
   if((st = allocuvm(pgdir, st, st + 2*PGSIZE)) == 0)
       goto bad;
   clearpteu(pgdir, (char*)(st - 2*PGSIZE));
   sp = st;
-
+  cprintf("Past exec");
 
 
   // Push argument strings, prepare rest of stack in ustack.
@@ -104,6 +104,7 @@ exec(char *path, char **argv)
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;
   curproc->sz = sz;
+  curproc->st = st;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   switchuvm(curproc);

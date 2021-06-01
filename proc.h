@@ -37,7 +37,7 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 // Per-process state
 struct proc {
   uint sz;                     // Points to the top of the heap.
-  uint pt;                     // Top of the stack pointer.
+  uint st;                     // Stack top pointer.
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
