@@ -12,7 +12,7 @@ exec(char *path, char **argv)
 {
   char *s, *last;
   int i, off;
-  uint argc, sz, sp, ustack[3+MAXARG+1];
+  uint argc, sz, st, sp, ustack[3+MAXARG+1];
   struct elfhdr elf;
   struct inode *ip;
   struct proghdr ph;
@@ -60,13 +60,20 @@ exec(char *path, char **argv)
   end_op();
   ip = 0;
 
-  // Allocate two pages at the next page boundary.
+  // Allocate two pages at edge of memory. Boundary at (KERNBASE - 1).
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
-  if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
-    goto bad;
-  clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
-  sp = sz;
+  st = (KERNBASE - 1) - 2*PGSIZE;
+//  if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
+//    goto bad;
+
+// [Bryan]: After modification, now stack begins at (KERNBASE - 1) and extends down two pages.
+  if((st = allocuvm(pgdir, st, st + 2*PGSIZE)) == 0)
+      goto bad;
+  clearpteu(pgdir, (char*)(st - 2*PGSIZE));
+  sp = st;
+
+
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
