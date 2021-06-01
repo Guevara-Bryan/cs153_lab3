@@ -221,6 +221,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
+    cprintf("Entered allocuvm");
   char *mem;
   uint a;
 
@@ -316,6 +317,7 @@ clearpteu(pde_t *pgdir, char *uva)
 pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
+    cprintf("entered copyuvm");
   pde_t *d;
   pte_t *pte;
   uint pa, i, flags;
@@ -340,7 +342,7 @@ copyuvm(pde_t *pgdir, uint sz)
   }
 
   //This should copy the contents of the stack which ends at KERNBASE - 1.
-  for(i = (KERNBASE - (2*PGSIZE) - 1); i < (KERNBASE - 1); i += PGSIZE){
+  for(i = (KERNBASE - 1); i >= (KERNBASE - 1 - 2*PGSIZE); i -= PGSIZE){
       if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
           panic("copyuvm: pte should exist");
       if(!(*pte & PTE_P))
