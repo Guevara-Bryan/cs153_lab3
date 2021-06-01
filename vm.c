@@ -221,11 +221,10 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
-    cprintf("Entered allocuvm");
   char *mem;
   uint a;
 
-  if(newsz >= ((KERNBASE - (2*PGSIZE) - 1)) )  // New boundary since stack now ends at KERNBASE - 1.
+  if(newsz >= KERNBASE)
     return 0;
   if(newsz < oldsz)
     return oldsz;
@@ -246,7 +245,6 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       return 0;
     }
   }
-  cprintf("all good in allocuvm");
   return newsz;
 }
 
@@ -317,7 +315,6 @@ clearpteu(pde_t *pgdir, char *uva)
 pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
-    cprintf("entered copyuvm");
   pde_t *d;
   pte_t *pte;
   uint pa, i, flags;
@@ -326,7 +323,6 @@ copyuvm(pde_t *pgdir, uint sz)
   if((d = setupkvm()) == 0)
     return 0;
 
-  // This should copy the contents of the parent process up to sz, which marks the top of the heap.
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
@@ -341,21 +337,24 @@ copyuvm(pde_t *pgdir, uint sz)
       goto bad;
   }
 
-  //This should copy the contents of the stack which ends at KERNBASE - 1.
-  for(i = (KERNBASE - 1); i >= (KERNBASE - 1 - 2*PGSIZE); i -= PGSIZE){
-      if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-          panic("copyuvm: pte should exist");
-      if(!(*pte & PTE_P))
-          panic("copyuvm: page not present");
-      pa = PTE_ADDR(*pte);
-      flags = PTE_FLAGS(*pte);
-      if((mem = kalloc()) == 0)
-          goto bad;
-      memmove(mem, (char*)P2V(pa), PGSIZE);
-      if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
-          goto bad;
-  }
-  cprintf("All good on copyuvm");
+    uint stack = PGROUNDDOWN(KERNBASE - 1);
+    cprintf("\nkernbase -1 ru: [%p]\n", PGROUNDUP(KERNBASE - 1));
+    cprintf("\nkernbase -1:  [%p]\n", KERNBASE - 1);
+    cprintf("\nstack: [%p]\n", stack);
+    for(i = stack; i >= stack - PGSIZE; i -= PGSIZE){
+        cprintf("[i]: [%p]\n", i);
+        if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+            panic("copyuvm: pte should exist");
+        if(!(*pte & PTE_P))
+            panic("copyuvm: page not present");
+        pa = PTE_ADDR(*pte);
+        flags = PTE_FLAGS(*pte);
+        if((mem = kalloc()) == 0)
+            goto bad;
+        memmove(mem, (char*)P2V(pa), PGSIZE);
+        if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
+            goto bad;
+    }
   return d;
 
 bad:
