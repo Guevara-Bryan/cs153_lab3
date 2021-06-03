@@ -14,12 +14,17 @@
 // to a saved program counter, and then the first argument.
 
 // Fetch the int at addr from the current process.
+
+
+// Beginning of stack
+const uint stack_start = KERNBASE - 1;
+
 int
 fetchint(uint addr, int *ip)
 {
   //struct proc *curproc = myproc();
 
-  if(addr >= KERNBASE - 1 || addr+4 > KERNBASE - 1)
+  if(addr >= stack_start || addr+4 > stack_start)
     return -1;
   *ip = *(int*)(addr);
   return 0;
@@ -32,12 +37,12 @@ int
 fetchstr(uint addr, char **pp)
 {
   char *s, *ep;
- // struct proc *curproc = myproc();
+  //struct proc *curproc = myproc();
 
-  if(addr >= KERNBASE - 1)
+  if(addr >= stack_start)
     return -1;
   *pp = (char*)addr;
-  ep = (char*)(KERNBASE - 1);
+  ep = (char*)(stack_start);
   for(s = *pp; s < ep; s++){
     if(*s == 0)
       return s - *pp;
@@ -63,7 +68,7 @@ argptr(int n, char **pp, int size)
  
   if(argint(n, &i) < 0)
     return -1;
-  if(size < 0 || (uint)i >= KERNBASE - 1 || (uint)i+size > KERNBASE - 1)
+  if(size < 0 || (uint)i >= stack_start || (uint)i+size > stack_start)
     return -1;
   *pp = (char*)i;
   return 0;

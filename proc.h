@@ -37,7 +37,6 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 // Per-process state
 struct proc {
   uint sz;                     // Points to the top of the heap.
-  uint st;                     // Stack top pointer.
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
@@ -50,6 +49,10 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  uint st;                     // Stack top pointer.
+  uint stack_end;              // Points to end of stack.
+  uint page_counter;          // Counts how many pages in stack.
 };
 
 // Process memory is laid out contiguously, low addresses first:

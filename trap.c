@@ -78,6 +78,23 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+
+  case T_PGFLT:
+      if(allocuvm(myproc()->pgdir, myproc()->stack_end - PGSIZE, myproc()->stack_end)){
+          setpteu(myproc()->pgdir, (char*)(myproc()->stack_end));
+          cprintf("New paged allocated from: [%p] to", myproc()->stack_end);
+          myproc()->stack_end -= PGSIZE;
+          clearpteu(myproc()->pgdir, (char*)(myproc()->stack_end));
+          cprintf(" [%p]\n", myproc()->stack_end);
+          break;
+      }
+      else{
+          panic("T_PGFLT: Page allocation failed");
+      }
+
+
+
+
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
