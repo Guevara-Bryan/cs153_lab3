@@ -52,7 +52,6 @@ struct proc {
 
   uint st;                     // Stack top pointer.
   uint stack_end;              // Points to end of stack.
-  uint page_counter;          // Counts how many pages in stack.
 };
 
 // Process memory is laid out contiguously, low addresses first:
